@@ -14,7 +14,7 @@
 <h1>Start:</h1>
 
 ```shell
-git clone https://github.com/yourusername/telegram-drun-bot
+git clone https://github.com/RyzMax/telegram-drun-bot
 cd telegram-drun-bot
 
 ollama serve
