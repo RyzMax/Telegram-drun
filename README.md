@@ -14,8 +14,8 @@
 <h1>Start:</h1>
 
 ```shell
-git clone https://github.com/RyzMax/telegram-drun-bot
-cd telegram-drun-bot
+git clone https://github.com/RyzMax/telegram-drun
+cd telegram-drun
 
 ollama serve
 ollama pull gemma2:2b
