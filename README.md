@@ -12,6 +12,7 @@
 - ollama
 
 <h1>Start:</h1>
+В .env вписывайте свой бот токен
 
 ```shell
 git clone https://github.com/RyzMax/telegram-drun
