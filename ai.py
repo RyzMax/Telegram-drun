@@ -2,6 +2,7 @@ import logging
 from pydantic import BaseModel
 from typing import List, Dict
 import ollama
+import re
 
 MODEL_NAME = "gemma2:2b"
 
@@ -14,6 +15,7 @@ SYSTEM_PROMPT = """
 3. Коротко: 1-2 предложения (20-50 слов)
 4. Русский, по-дружески
 5. Помни контекст!
+6. НОВЫЕ СТРОКИ между мыслями: \n\n
 
 ПРИМЕРЫ (ТОЧНО ПОДРАЖАЙ):
 Пользователь: Привет!
@@ -40,26 +42,30 @@ class ProactiveDraft(BaseModel):
     should_message: bool
     text: str
 
+def clean_emojis(text: str) -> str:
+    emoji_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"
+        u"\U0001F300-\U0001F5FF" 
+        u"\U0001F680-\U0001F6FF"
+        u"\U0001F1E0-\U0001F1FF"
+        "]+", flags=re.UNICODE)
+    return emoji_pattern.sub('', text).strip()
+
+
 def reply_text(history: List[Dict[str, str]]) -> str:
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history[-6:]
+
     try:
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
-        response = ollama.chat(
-            model=MODEL_NAME,
-            messages=messages,
-            stream=False,
-            options={
-                "temperature": 0.7,
-                "num_predict": 150,
-                "num_gpu": 999,
-            }
-        )
-        text = response['message']['content'].strip()
-        if not text:
-            raise RuntimeError("Empty response from Ollama")
-        return text
-    except Exception as e:
-        logging.exception("Ollama reply_text failed")
-        raise RuntimeError(f"Ollama error: {e}")
+        response = ollama.chat(model=MODEL_NAME, messages=messages)
+        answer = clean_emojis(response['message']['content'].strip())
+
+        if len(answer) < 3:
+            answer = "Мяу? :3"
+
+        return answer
+
+    except:
+        return "Глючу ^_^ :c"
 
 def generate_proactive(context: str) -> ProactiveDraft:
     try:

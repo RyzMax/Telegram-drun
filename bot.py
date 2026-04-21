@@ -56,12 +56,25 @@ async def on_text(message: Message):
         "нейтрально": "CAACAgIAAxkBAAFHvUtp56DiiecB5KedqWgijkp0DRAQYAAC5E0AAv5YQUgmBc27F-Q20jsE"
     }
 
+    quoted_text = None
+    if message.quote:
+        quoted_text = message.quote.text
+        quote_pos = message.quote.position
+        print(f"👈 Цитирует: '{quoted_text}' (позиция {quote_pos})")
+
+    elif message.reply_to_message:  # Reply
+        quoted_text = message.reply_to_message.text or message.reply_to_message.caption
+        print(f"↩️ Reply на: '{quoted_text[:50]}...'")
+
     logging.info(f"Message from {chat_id}: {text}")
 
     await touch_user(chat_id)
     await add_message(chat_id, "user", text)
 
     history = await get_recent_messages(chat_id, HISTORY_LIMIT)
+    if quoted_text:
+        history.insert(0, {"role": "user", "content": f"Цитирует: {quoted_text}"})
+        
     try:
         answer = await asyncio.to_thread(reply_text, history)
         await add_message(chat_id, "assistant", answer)
